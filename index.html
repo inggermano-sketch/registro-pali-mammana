@@ -747,16 +747,14 @@ var TEMPLATE_GIORNALIERA_B64 = "JVBERi0xLjcKCjQgMCBvYmoKKElkZW50aXR5KQplbmRvYmoK
         if(str===undefined||str===null||str==="") return;
         var size = opts.size || 9;
         var useFont = opts.bold ? fontBold : font;
-        page.drawText(String(str), { x: x, y: topY(page, top), size: size, font: useFont, color: opts.color || rgb(0,0,0) });
+        var yOff = (opts.yOffset===undefined ? 2.4 : opts.yOffset);
+        page.drawText(String(str), { x: x, y: topY(page, top)+yOff, size: size, font: useFont, color: opts.color || rgb(0,0,0) });
       }
       function check(xCenter, bottomTopDown, scale){
         scale = scale || 1;
         var yBase = topY(page, bottomTopDown) - 1;
         page.drawLine({ start:{x:xCenter-4*scale,y:yBase+2*scale}, end:{x:xCenter-1*scale,y:yBase-1*scale}, thickness:1.3*scale, color:GREEN });
         page.drawLine({ start:{x:xCenter-1*scale,y:yBase-1*scale}, end:{x:xCenter+5*scale,y:yBase+5*scale}, thickness:1.3*scale, color:GREEN });
-      }
-      function circle(cx, cyTop, rx, ry){
-        page.drawEllipse({ x: cx, y: topY(page, cyTop), xScale: rx, yScale: ry, borderColor: RED, borderWidth: 1.3 });
       }
 
       // Identificazione
@@ -771,9 +769,10 @@ var TEMPLATE_GIORNALIERA_B64 = "JVBERi0xLjcKCjQgMCBvYmoKKElkZW50aXR5KQplbmRvYmoK
       if(rec.calcestruzzoTeorico) text(itNum(n(rec.calcestruzzoTeorico,2)), 190, 351.2, {size:9.5});
 
       // Box destro: Rivestimento / Palo strumentato (sempre NO) / Presenza acqua
-      circle(rec.rivestimento==="SI"?486:529, 265.6-3, 11, 7.5);
-      circle(529, 287.1-3, 11, 7.5); // Palo strumentato: sempre NO
-      circle(rec.presenzaAcqua==="SI"?411:445, 324.2-3, 11, 7.5);
+      // Spunta verde centrata esattamente sul testo SI/NO corrispondente (coordinate estratte dal PDF).
+      check(rec.rivestimento==="SI"?482:528, 253.3);
+      check(528, 274.3); // Palo strumentato: sempre NO
+      check(rec.presenzaAcqua==="SI"?411:444, 297.0);
       if(rec.presenzaAcqua==="SI"){
         if(rec.acquaDaM) text(itNum(rec.acquaDaM), 467, 318, {size:9});
         if(rec.acquaAM) text(itNum(rec.acquaAM), 512, 318, {size:9});
@@ -807,12 +806,12 @@ var TEMPLATE_GIORNALIERA_B64 = "JVBERi0xLjcKCjQgMCBvYmoKKElkZW50aXR5KQplbmRvYmoK
       var colX = { ddt:245, m3:308, oi:345, of:382, slump:420, temp:490 };
       rec.getti.slice(0,6).forEach(function(g, i){
         var y = rowsGetto[i];
-        if(g.ddt) text(g.ddt, colX.ddt, y, {size:8});
-        if(g.volume) text(n(g.volume,2), colX.m3, y, {size:8});
-        if(g.oraInizio) text(g.oraInizio, colX.oi, y, {size:8});
-        if(g.oraFine) text(g.oraFine, colX.of, y, {size:8});
-        if(g.slump) text(n(g.slump,1), colX.slump, y, {size:8});
-        if(g.temperatura) text(n(g.temperatura,1), colX.temp, y, {size:8});
+        if(g.ddt) text(g.ddt, colX.ddt, y, {size:8, yOffset:0});
+        if(g.volume) text(n(g.volume,2), colX.m3, y, {size:8, yOffset:0});
+        if(g.oraInizio) text(g.oraInizio, colX.oi, y, {size:8, yOffset:0});
+        if(g.oraFine) text(g.oraFine, colX.of, y, {size:8, yOffset:0});
+        if(g.slump) text(n(g.slump,1), colX.slump, y, {size:8, yOffset:0});
+        if(g.temperatura) text(n(g.temperatura,1), colX.temp, y, {size:8, yOffset:0});
       });
       if(rec.getti.length > 6){
         text("+"+(rec.getti.length-6)+" ulteriori consegne non riportate (vedi app)", 122, 720, {size:7, color: RED});
@@ -873,35 +872,37 @@ var TEMPLATE_GIORNALIERA_B64 = "JVBERi0xLjcKCjQgMCBvYmoKKElkZW50aXR5KQplbmRvYmoK
             if(str===undefined||str===null||str==="") return;
             var size = opts.size || 7.5;
             var useFont = opts.bold ? fontBold : font;
-            page.drawText(String(str), { x:x, y:Yg(top)+(opts.yOffset===undefined?2.0:opts.yOffset), size:size, font:useFont, color: opts.color||BLACK });
+            // default: centra verticalmente il testo nella cella (celle alte ~19.9-20.3pt)
+            page.drawText(String(str), { x:x, y:Yg(top)+(opts.yOffset===undefined?7.3:opts.yOffset), size:size, font:useFont, color: opts.color||BLACK });
           }
 
           txt(dataLabel, 107, 131.0, {size:9, bold:true});
           txt(schedaN, 735, 58.5, {size:9, bold:true});
 
           var ROW = {
-            nome:155.0, prof:195.2, diam:215.2,
+            nome:155.0, prof:195.2, diam:215.2, verticalita:235.1,
             consPul:294.8, sovrapp:314.8, qgabbia:334.7,
             slump:394.4, ddt1:434.3, ddt2:454.2, vol:474.1, qgetto:494.0
           };
 
           chunkPiles.forEach(function(p, idx){
             var xc = COLS_G[idx] + 4;
-            txt(p.numeroPalo, xc, ROW.nome, { bold:true, size:8, yOffset:5.5 });
+            txt(p.numeroPalo, xc, ROW.nome, { bold:true, size:8 });
             if(p.lunghezzaPerforazione) txt(itNum(n(p.lunghezzaPerforazione,2)), xc, ROW.prof, {size:7.5});
             txt("800", xc, ROW.diam, {size:7.5});
+            txt("OK", xc, ROW.verticalita, {size:7.5});
             txt("OK", xc, ROW.consPul, {size:7.5});
             txt("N.A.", xc, ROW.sovrapp, {size:7});
-            txt("si veda report", xc, ROW.qgabbia, {size:5.3, yOffset:6.5});
-            txt("topografico", xc, ROW.qgabbia, {size:5.3, yOffset:-0.5});
+            txt("si veda report", xc, ROW.qgabbia, {size:5.3, yOffset:13.5});
+            txt("topografico", xc, ROW.qgabbia, {size:5.3, yOffset:5.5});
             if(p.slumpGiornaliera) txt(n(p.slumpGiornaliera,1), xc, ROW.slump, {size:7.5});
             var g1 = p.getti && p.getti[0], g2 = p.getti && p.getti[1];
             if(g1 && g1.ddt) txt(g1.ddt, xc, ROW.ddt1, {size:7, maxWidth:48});
             if(g2 && g2.ddt) txt(g2.ddt, xc, ROW.ddt2, {size:7, maxWidth:48});
             var totVol = (p.getti||[]).reduce(function(s,gg){ return s+(parseFloat(gg.volume)||0); }, 0);
             if(totVol>0) txt(itNum(n(totVol,2)), xc, ROW.vol, {size:7.5});
-            txt("si veda report", xc, ROW.qgetto, {size:5.3, yOffset:6.5});
-            txt("topografico", xc, ROW.qgetto, {size:5.3, yOffset:-0.5});
+            txt("si veda report", xc, ROW.qgetto, {size:5.3, yOffset:13.5});
+            txt("topografico", xc, ROW.qgetto, {size:5.3, yOffset:5.5});
           });
         })(page, font, fontBold, chunks[ci]);
 
